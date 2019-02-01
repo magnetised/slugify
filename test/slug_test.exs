@@ -17,11 +17,14 @@ defmodule SlugTest do
 
   test "non-alphanumeric ASCII characters are stripped" do
     input =
-      Enum.into(?!..?/, []) ++
-      Enum.into(?:..?@, []) ++
-      Enum.into(?[..?`, []) ++
-      Enum.into(?{..?~, [])
+      Enum.concat([
+        Enum.into(?!..?/, []),
+        Enum.into(?:..?@, []),
+        Enum.into(?[..?`, []),
+        Enum.into(?{..?~, [])
+      ])
       |> List.to_string()
+      |> String.replace("-", "")
 
     assert Slug.slugify(input) == nil
   end
@@ -33,6 +36,12 @@ defmodule SlugTest do
   test "replace whitespaces and delimiters with a single separator" do
     assert Slug.slugify("Hello, World!") == "hello-world"
     assert Slug.slugify("  Hello,\t World!\n") == "hello-world"
+  end
+
+  test "separator character is left as-is" do
+    assert Slug.slugify("Hello-World!") == "hello-world"
+    assert Slug.slugify(" Hello There-World!") == "hello-there-world"
+    assert Slug.slugify(" Hello_There World!", separator: "_") == "hello_there_world"
   end
 
   test "customize separator with any codepoint or string" do

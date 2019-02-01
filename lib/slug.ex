@@ -45,7 +45,7 @@ defmodule Slug do
     separator = get_separator(opts)
     lowercase? = Keyword.get(opts, :lowercase, true)
     truncate_length = get_truncate_length(opts)
-    ignored_codepoints = get_ignored_codepoints(opts)
+    ignored_codepoints = get_ignored_codepoints(separator, opts)
 
     string
     |> String.split(~r{\s}, trim: true)
@@ -82,19 +82,22 @@ defmodule Slug do
     end
   end
 
-  defp get_ignored_codepoints(opts) do
+  defp get_ignored_codepoints(separator, opts) do
     characters_to_ignore = Keyword.get(opts, :ignore)
 
-    string = case characters_to_ignore do
-      characters when is_list(characters) ->
-        Enum.join(characters)
-      characters when is_binary(characters) ->
-        characters
-      _ ->
-        ""
-    end
+    string =
+      case characters_to_ignore do
+        characters when is_list(characters) ->
+          characters
+          |> Enum.reject(&(&1 == separator))
+          |> Enum.join()
+        characters when is_binary(characters) ->
+          String.replace(characters, separator, "")
+        _ ->
+          ""
+      end
 
-    normalize_to_codepoints(string)
+    normalize_to_codepoints(separator <> string)
   end
 
   defp join(words, separator, nil), do: Enum.join(words, separator)
